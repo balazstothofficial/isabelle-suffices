@@ -1,4 +1,4 @@
-session Suffices = HOL +
+session Suffices = Pure +
   description "
     The Isar command 'suffices': one step of backward reasoning.
   "
