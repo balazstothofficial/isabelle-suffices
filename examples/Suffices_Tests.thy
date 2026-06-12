@@ -1,6 +1,23 @@
 theory Suffices_Tests
-  imports Suffices Main
+  imports Suffices.Suffices Main
+  keywords "suffices_must_fail" :: prf_decl % "proof"
 begin
+
+text \<open>A test command for the error cases: assert that \<^theory_text>\<open>suffices\<close> rejects
+  the given statement, leaving the proof state unchanged.\<close>
+
+ML \<open>
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>suffices_must_fail\<close>
+    "assert that the given suffices statement is rejected"
+    (Parse.propp >> (fn p =>
+      Toplevel.proof' (fn int => fn state =>
+        (case Exn.capture (fn () =>
+            Suffices.suffices_cmd [] [] [(Binding.empty_atts, [p])] int state) () of
+          Exn.Exn (ERROR _) => state
+        | Exn.Exn exn => Exn.reraise exn
+        | Exn.Res _ => error "Unexpected success of suffices"))));
+\<close>
 
 text \<open>Basic use: the abbreviation that denoted the goal (?thesis) is rebound
   to the sufficient statement.\<close>
@@ -126,7 +143,7 @@ proof -
     by auto
 qed
 
-lemma test_obtain_3: 
+lemma test_obtain_3:
   assumes "\<exists>x. P x" "\<exists>y. Q y"
   shows "\<exists>x y. P x \<and> Q y"
 proof -
@@ -153,7 +170,7 @@ proof -
   suffices "P x" "Q y"
     by auto
 
-  show "P x" and "Q y" 
+  show "P x" and "Q y"
     using P_Q
     by auto
 qed
@@ -181,6 +198,9 @@ proof (rule allI)
     by auto
 qed
 
+text \<open>A schematic variable in the pending goal is rejected: its
+  instantiation cannot depend on the obtained variable.\<close>
+
 lemma test_obtain_bad:
   shows "\<exists>a :: bool. \<forall>b. a = b"
 proof (rule exI, rule allI)
@@ -189,10 +209,19 @@ proof (rule exI, rule allI)
   obtain a :: bool where a_b: "a = b"
     by presburger
 
-  (* 
-  Correctly does not work and prints a nice error.
-  suffices "a = b"  
-  *)
+  suffices_must_fail "a = b"
+  oops
+
+text \<open>If several distinct bindings denote conclusions of pending subgoals,
+  the current conclusion is ambiguous and suffices is rejected.\<close>
+
+lemma test_ambiguous_bad:
+  fixes n :: nat
+  assumes "n > 10"
+  shows "n > 4 \<and> n > 3"
+proof (rule conjI)
+  let ?a = "n > 4" and ?b = "n > 3"
+  suffices_must_fail "n > 5"
   oops
 
 text \<open>Suffices works in nested proof blocks.\<close>
@@ -222,6 +251,32 @@ proof -
   show ?goal
     using a by simp
 qed
+
+text \<open>(is ...) binds exactly the schematic variables occurring in the
+  pattern, to the matching subterms of the sufficient statement.\<close>
+
+lemma test_is_pattern_var:
+  fixes n :: nat
+  assumes a: "n > 10"
+  shows "n > 4"
+proof -
+  suffices "n > 5" (is "?x < n")
+    by simp
+  show "?x < n" \<comment> \<open>\<open>?x\<close> is bound to \<open>5\<close>, since \<open>n > 5\<close> is \<open>5 < n\<close>\<close>
+    using a by simp
+qed
+
+text \<open>A pattern that does not match the statement is rejected: \<open>n > 4\<close> is
+  input notation for \<open>4 < n\<close>, which cannot match \<open>5 < n\<close> \<comment> \<open>patterns are
+  matched, not proved\<close>.\<close>
+
+lemma test_is_pattern_bad:
+  fixes n :: nat
+  assumes a: "n > 10"
+  shows "n > 4"
+proof -
+  suffices_must_fail "n > 5" (is "n > 4")
+  oops
 
 text \<open>Statements may be generalized with \<open>if\<close> and \<open>for\<close>, as in \<open>have\<close>; the
   block continues with the variables fixed and the premises assumed.

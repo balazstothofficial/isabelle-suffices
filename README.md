@@ -1,9 +1,9 @@
-# isabelle-playground
+# isabelle-suffices
 
 ## The `suffices` command
 
-[Suffices.thy](Suffices.thy) defines a new Isar command for one step of *backward*
-reasoning: state something stronger, justify in place that it implies the current
+[Suffices.thy](Suffices.thy) (implementation in [suffices.ML](suffices.ML)) defines
+a new Isar command for one step of *backward* reasoning: state something stronger, justify in place that it implies the current
 goal, and then prove the stronger statement — instead of proving it first and
 deriving the goal at the very end.
 
@@ -42,11 +42,14 @@ suffices "n = 2 * (2 * k)"
 show ?thesis using ‹n = 4 * k› by simp
 ```
 
-See [Suffices_Example.thy](Suffices_Example.thy) for a worked induction proof and
-[Suffices_Tests.thy](Suffices_Tests.thy) for all supported forms.
+See [Suffices_Example.thy](examples/Suffices_Example.thy) for a worked induction proof and
+[Suffices_Tests.thy](examples/Suffices_Tests.thy) for all supported forms.
 
 ## Building
 
 ```sh
-isabelle build -d . Suffices_Playground
+isabelle build -d . Suffices_Examples
 ```
+
+This builds the `Suffices` session (the command itself, based on `Pure` within
+`HOL`) together with the examples and tests.
