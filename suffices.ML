@@ -11,11 +11,11 @@ sig
   val suffices: (binding * typ option * mixfix) list ->
     (Thm.binding * (term * term list) list) list ->
     (Thm.binding * (term * term list) list) list ->
-    bool -> Proof.state -> Proof.state
+    Proof.state -> Proof.state
   val suffices_cmd: (binding * string option * mixfix) list ->
     (Attrib.binding * (string * string list) list) list ->
     (Attrib.binding * (string * string list) list) list ->
-    bool -> Proof.state -> Proof.state
+    Proof.state -> Proof.state
 end;
 
 structure Suffices: SUFFICES =
@@ -163,7 +163,7 @@ fun lift_over ctxt goal_ctxt props =
 
 local
 
-fun gen_suffices prep_stmt prep_att raw_fixes raw_assumes raw_shows int state =
+fun gen_suffices prep_stmt prep_att raw_fixes raw_assumes raw_shows state =
   let
     val ctxt = Proof.context_of state;
     val (concl, concl_binds) = current_concl state;
@@ -200,7 +200,7 @@ fun gen_suffices prep_stmt prep_att raw_fixes raw_assumes raw_shows int state =
 
         val new_assumes = map (fn g => (Binding.empty_atts, [(g, [])])) new_goals;
         val (goal_thms, goal_state) =
-          Proof.show false NONE (K I) [] new_assumes shows int state';
+          Proof.show false NONE (K I) [] new_assumes shows state';
 
         (*conclude concl from the justification rule, whose premises are the
           sufficient statements: instances of the presumed (generalized)
@@ -280,7 +280,7 @@ fun gen_suffices prep_stmt prep_att raw_fixes raw_assumes raw_shows int state =
   in
     state
     |> Proof.map_context (fold Variable.bind_term result_binds)
-    |> Proof.have true NONE after_qed [] assumes shows int
+    |> Proof.have true NONE after_qed [] assumes shows
     |-> (fn that_facts =>
           Proof.refine_singleton (Method.Basic (K (Method.insert that_facts))))
   end;
@@ -308,8 +308,8 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>suffices\<close>
     "one step of backward reasoning: it suffices to show the given statement(s)"
     (structured_statement >> (fn (strict, fixes, assumes, shows) =>
-      Toplevel.proof' (fn int => fn state =>
-        if strict then suffices_cmd fixes assumes shows int state
+      Toplevel.proof (fn state =>
+        if strict then suffices_cmd fixes assumes shows state
         else
           error "Weak premises (\"when\") are not supported: the sufficient \
             \statements become goals as a whole; use \"if\" for premises of \

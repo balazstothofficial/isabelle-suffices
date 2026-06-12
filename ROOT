@@ -5,10 +5,12 @@ session Suffices = Pure +
   theories
     Suffices
 
-session Suffices_Examples in examples = Suffices +
+session Suffices_Examples in examples = HOL +
   description "
     Examples and tests for the 'suffices' command.
   "
+  sessions
+    Suffices
   theories
     Suffices_Example
     Suffices_Tests

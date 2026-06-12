@@ -11,9 +11,9 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>suffices_must_fail\<close>
     "assert that the given suffices statement is rejected"
     (Parse.propp >> (fn p =>
-      Toplevel.proof' (fn int => fn state =>
+      Toplevel.proof (fn state =>
         (case Exn.capture (fn () =>
-            Suffices.suffices_cmd [] [] [(Binding.empty_atts, [p])] int state) () of
+            Suffices.suffices_cmd [] [] [(Binding.empty_atts, [p])] state) () of
           Exn.Exn (ERROR _) => state
         | Exn.Exn exn => Exn.reraise exn
         | Exn.Res _ => error "Unexpected success of suffices"))));

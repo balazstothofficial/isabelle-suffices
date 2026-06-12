@@ -47,9 +47,15 @@ See [Suffices_Example.thy](examples/Suffices_Example.thy) for a worked induction
 
 ## Building
 
+This branch targets the current Isabelle **development version** (the
+[Isabelle repository](https://isabelle.in.tum.de/repos/isabelle)); it does not
+work with Isabelle2025-2 or earlier releases. Last verified against changeset
+[1da23737c1b9](https://isabelle.in.tum.de/repos/isabelle/rev/1da23737c1b9)
+(2026-06-12).
+
 ```sh
 isabelle build -d . Suffices_Examples
 ```
 
-This builds the `Suffices` session (the command itself, based on `Pure` within
-`HOL`) together with the examples and tests.
+This builds the `Suffices` session (the command itself, based on `Pure`)
+together with the `HOL`-based examples and tests.
